@@ -1,0 +1,5 @@
+/* Regression as a Projection: tool-specific styles (shared look is in ../shared/style.css). */
+.plot-drag { touch-action: none; cursor: grab; }
+.plot-drag.dragging { cursor: grabbing; }
+.panel-head .btn-row button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 650; }
+.caption > span + span { margin-left: 6px; }

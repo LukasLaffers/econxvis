@@ -1,0 +1,5 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Bundled third-party files: keep byte-for-byte
+shared/vendor/** -text
