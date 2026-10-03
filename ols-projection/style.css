@@ -1,5 +1,19 @@
 /* Regression as a Projection: tool-specific styles (shared look is in ../shared/style.css). */
+
+/* The projection gets most of the page: a wider middle column and a tall plot. */
+.layout { grid-template-columns: 280px minmax(0, 1fr) minmax(0, 360px); }
+.plot-proj { height: min(78vh, 820px); min-height: 520px; cursor: grab; }
+.plot-proj:active { cursor: grabbing; }
+@media (max-width: 1250px) {
+  .layout { grid-template-columns: 280px minmax(0, 1fr); }
+}
+@media (max-width: 800px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .plot-proj { height: 60vh; min-height: 380px; }
+}
+
 .plot-drag { touch-action: none; cursor: grab; }
 .plot-drag.dragging { cursor: grabbing; }
 .panel-head .btn-row button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 650; }
+.panel-head .btn-row button[data-zoom] { min-width: 32px; font-weight: 700; }
 .caption > span + span { margin-left: 6px; }

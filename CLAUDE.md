@@ -7,7 +7,7 @@ Published with GitHub Pages; each tool gets a stable URL that can be linked from
 ## Layout
 
 ```
-index.html              landing page: one card per tool, grouped by lecture
+index.html              landing page: one card per tool (no lecture numbers)
 shared/style.css        common look (colors, typography, layout, controls); copied from Microvis,
                         plus the colours of the regression figures (--fig-*)
 shared/ui.js            small helpers every tool uses (controls, KaTeX, plot styling, error banner); no econometrics.
@@ -33,7 +33,7 @@ shared/vendor/          bundled third-party libraries (Plotly, KaTeX) with their
 - Write all code ourselves. Do not copy code from other repositories without a compatible license. Microvis is ours (MIT) and is the reference for style.
 - Add a card for each new tool to `index.html`.
 - `.nojekyll` must stay in the root so GitHub Pages serves files as they are.
-- Page eyebrow "Lecture N · <title of the handout>", e.g. "Lecture 1 · Regression basics"; no course code or university name on pages.
+- No lecture numbers on the pages or the landing page (unlike Microvis). The page eyebrow is the title of the handout, e.g. "Regression basics"; no course code or university name.
 
 ## Notation (must match the handouts)
 
