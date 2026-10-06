@@ -5,7 +5,7 @@ module.exports = {
   site: {
     title: 'Econxvis',
     pageTitle: 'Econxvis — Visualizations for Econometrics',
-    lead: 'Interactive figures for econometrics. Move the data, and watch the estimates respond.',
+    lead: 'Interactive figures for econometrics.',
     note: '<b>Work in progress.</b> The tools are still being developed and checked. Feedback of any kind is very welcome: errors, unclear explanations, ideas for new tools.',
     footer: 'Lukáš Lafférs'
   },
