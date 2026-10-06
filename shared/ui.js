@@ -1,7 +1,9 @@
 /*
  * Econxvis: small helpers shared by all tools (no econometrics here).
+ * Kept identical to shared/ui.js of Microvis, except the name (window.Econxvis) and the regression-figure
+ * colours in theme().
  * Formatting, KaTeX, slider+number controls, plot styling, error banner.
- * Exposes window.Econxvis (the same helpers as shared/ui.js in Microvis).
+ * Exposes window.Econxvis.
  */
 (function (root) {
   'use strict';
@@ -30,7 +32,21 @@
     else el.textContent = src;
   }
   const texStr = src => root.katex ? root.katex.renderToString(src, { throwOnError: false }) : src;
-  const renderStaticTex = (scope = document) => scope.querySelectorAll('.tex[data-tex]').forEach(el => tex(el, el.dataset.tex));
+  // In the page header, formulas separated by \qquad become separate pieces: each piece stays on one
+  // line, and on a narrow screen the pieces wrap instead of the whole line scrolling.
+  function renderStaticTex(scope = document) {
+    scope.querySelectorAll('.tex[data-tex]').forEach(el => {
+      const src = el.dataset.tex;
+      if (!el.closest('.subtitle') || !src.includes('\\qquad')) { tex(el, src); return; }
+      el.textContent = '';
+      src.split('\\qquad').map(t => t.trim()).filter(Boolean).forEach(part => {
+        const piece = document.createElement('span');
+        piece.className = 'tex-piece';
+        el.appendChild(piece);
+        tex(piece, part);
+      });
+    });
+  }
 
   // ---------- numbers ----------
 
@@ -132,7 +148,8 @@
     return {
       ink: v('--ink'), muted: v('--muted'), line: v('--line'), grid: v('--grid'), panel: v('--panel'),
       accent: v('--accent'), accentSoft: v('--accent-soft'), accent2: v('--accent-2'), accent3: v('--accent-3'), accent4: v('--accent-4'), dec: v('--dec'), inc: v('--inc'),
-      // colours of the regression figures in the lecture notes
+      blue: v('--l2-blue'), red: v('--l2-red'), orange: v('--l2-orange'), grey: v('--l2-grey'), profitFill: v('--l2-profit'),
+      // colours of the regression figures in the handouts
       fy: v('--fig-y'), fyhat: v('--fig-yhat'), fresid: v('--fig-resid'), fybar: v('--fig-ybar'), febar: v('--fig-ebar'), fess: v('--fig-ess'),
       plane: v('--fig-plane'), planeEdge: v('--fig-plane-edge'),
       font: v('--font'),
@@ -192,6 +209,65 @@
     if (mq.addEventListener) mq.addEventListener('change', cb);
   }
 
+  /*
+   * Keep every figure as large as its box. Plotly measures its box when it first draws; if the page
+   * layout changes afterwards (fonts and formulas finish loading, a panel opens, the window or phone
+   * turns), some browsers, Safari in particular, leave the figure at the old size. Watch each .plot
+   * and resize the figure whenever its box changes.
+   */
+  function fitPlots() {
+    if (!root.Plotly || !root.ResizeObserver) return;
+    const pending = new Set();
+    let frame = 0;
+    const flush = () => {
+      frame = 0;
+      pending.forEach(gd => { if (gd._fullLayout && gd.offsetWidth > 0) root.Plotly.Plots.resize(gd); });
+      pending.clear();
+    };
+    const ro = new root.ResizeObserver(entries => {
+      entries.forEach(e => pending.add(e.target));
+      if (!frame) frame = root.requestAnimationFrame(flush);
+    });
+    document.querySelectorAll('.plot').forEach(el => ro.observe(el));
+    // and once more when everything (fonts included) has loaded
+    const all = () => {
+      document.querySelectorAll('.plot').forEach(el => pending.add(el));
+      if (!frame) frame = root.requestAnimationFrame(flush);
+    };
+    if (document.readyState === 'complete') all(); else root.addEventListener('load', all);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(all);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fitPlots); else fitPlots();
+
+  /*
+   * Formula boxes scroll sideways only when their content really is too wide. KaTeX often draws a pixel
+   * or two beyond its box; with plain overflow:auto, Safari (scroll bars always shown) then puts a
+   * scrollbar under a formula that fits. Such boxes clip by default and get the class "scrolls"
+   * (overflow-x: auto) only when the content is more than 3px wider than the box.
+   */
+  const SCROLL_BOXES = '.formula, .subtitle, .eqs, #marginal-box';
+  function watchScrollBoxes() {
+    const boxes = [...document.querySelectorAll(SCROLL_BOXES)];
+    if (!boxes.length) return;
+    const check = el => el.classList.toggle('scrolls', el.scrollWidth - el.clientWidth > 3);
+    let frame = 0;
+    const checkAll = () => { frame = 0; boxes.forEach(check); };
+    const later = () => { if (!frame) frame = root.requestAnimationFrame(checkAll); };
+    if (root.ResizeObserver) { const ro = new root.ResizeObserver(later); boxes.forEach(el => ro.observe(el)); }
+    if (root.MutationObserver) { const mo = new root.MutationObserver(later); boxes.forEach(el => mo.observe(el, { childList: true, subtree: true, characterData: true })); }
+    root.addEventListener('load', later);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(later);
+    later();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchScrollBoxes); else watchScrollBoxes();
+
+  // On a phone the controls come before the figure: there "How to read this" starts closed (one tap opens it),
+  // so the figure is not pushed far down the page.
+  function foldHowtoOnPhones() {
+    if (root.matchMedia && root.matchMedia('(max-width: 800px)').matches) document.querySelectorAll('details.howto').forEach(d => { d.open = false; });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', foldHowtoOnPhones); else foldHowtoOnPhones();
+
   // ---------- errors: show them on the page, not only in the console ----------
 
   const reported = new Set();
@@ -207,7 +283,8 @@
   function guard(what, fn) {
     try { fn(); } catch (err) { showError(`Could not draw the ${what}: ${err && err.message ? err.message : err}`); }
   }
-  root.addEventListener('error', ev => { if (ev.message) showError(`Error: ${ev.message}`); });
+  // A ResizeObserver notice is not an error of the page.
+  root.addEventListener('error', ev => { if (ev.message && !/ResizeObserver/.test(ev.message)) showError(`Error: ${ev.message}`); });
   root.addEventListener('unhandledrejection', ev => {
     const r = ev.reason;
     showError(`Error: ${r && r.message ? r.message : r}`);

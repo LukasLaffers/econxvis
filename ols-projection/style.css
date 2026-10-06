@@ -14,6 +14,5 @@
 
 .plot-drag { touch-action: none; cursor: grab; }
 .plot-drag.dragging { cursor: grabbing; }
-.panel-head .btn-row button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 650; }
 .panel-head .btn-row button[data-zoom] { min-width: 32px; font-weight: 700; }
 .caption > span + span { margin-left: 6px; }

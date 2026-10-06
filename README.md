@@ -7,4 +7,6 @@ Open `index.html` in a browser (no installation needed), or visit the GitHub Pag
 Tools:
 - [Regression as a Projection](ols-projection/index.html) — geometry of least squares.
 
+Style: the Microvis style kit (`STYLE.md`). The start page is generated: `node tools/build-site.cjs`.
+
 Tests: `node ols-projection/test-model.cjs`
